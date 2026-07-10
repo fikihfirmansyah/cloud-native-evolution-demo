@@ -28,8 +28,12 @@ jobs:
     steps:
       # Tidak ada langkah build. Tidak ada test. Tidak ada image.
       # Cuma: masuk ke server, jalankan skrip deploy.
+      # Action pihak ketiga ini menerima private key SSH — dipin ke
+      # commit SHA (bukan tag) supaya tag yang di-repoint ke kode
+      # berbahaya tidak bisa mencuri key. Praktik wajib untuk action
+      # non-official yang memegang secret.
       - name: SSH ke VPS dan jalankan deploy-jadul.sh
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
