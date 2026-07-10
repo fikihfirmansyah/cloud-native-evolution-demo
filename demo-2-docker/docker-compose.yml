@@ -1,0 +1,98 @@
+# =============================================================
+# Demo 2 — Stack aplikasi (API + Web + Postgres)
+#
+# PRASYARAT: Traefik + Portainer sudah jalan di server dengan
+# external network "proxy-net" (setup standar — lihat
+# infra/traefik-portainer-compose.yml kalau setup server baru).
+#
+# Konfigurasi lewat file .env (copy dari .env.example).
+# =============================================================
+
+services:
+  api:
+    # Image dari GHCR (di-push oleh GitHub Actions). Untuk build lokal:
+    # docker compose build api
+    image: ${API_IMAGE:-ghcr.io/fikihfirmansyah/demo2-api:latest}
+    build:
+      context: ./api
+      args:
+        VERSION: ${VERSION:-dev}
+    restart: unless-stopped
+    # JANGAN set container_name di sini — service ini harus bisa
+    # di-scale: docker compose up -d --scale api=5
+    environment:
+      DATABASE_URL: postgres://produk:${POSTGRES_PASSWORD}@postgres:5432/katalog?sslmode=disable
+      PORT: "8080"
+      VERSION: ${VERSION:-dev}
+      CORS_ORIGIN: https://${DOMAIN_WEB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proxy-net
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.demo2-api.rule=Host(`${DOMAIN_API}`)"
+      - "traefik.http.routers.demo2-api.entrypoints=websecure"
+      - "traefik.http.routers.demo2-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.demo2-api.loadbalancer.server.port=8080"
+      # Middleware retry: kalau satu replica mati saat request masuk,
+      # Traefik mencoba ulang ke replica lain — kunci "zero downtime"
+      # saat demo kill container / redeploy.
+      - "traefik.http.middlewares.demo2-retry.retry.attempts=3"
+      - "traefik.http.middlewares.demo2-retry.retry.initialinterval=200ms"
+      - "traefik.http.routers.demo2-api.middlewares=demo2-retry"
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/fikihfirmansyah/demo2-web:latest}
+    build:
+      context: ./web
+      args:
+        VITE_API_BASE: https://${DOMAIN_API}
+    restart: unless-stopped
+    networks:
+      - proxy-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.demo2-web.rule=Host(`${DOMAIN_WEB}`)"
+      - "traefik.http.routers.demo2-web.entrypoints=websecure"
+      - "traefik.http.routers.demo2-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.demo2-web.loadbalancer.server.port=80"
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: produk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: katalog
+    volumes:
+      # Data persisten — survive restart container
+      - pgdata:/var/lib/postgresql/data
+      # Seed otomatis saat inisialisasi PERTAMA (volume masih kosong)
+      - ../shared/seed-data.sql:/docker-entrypoint-initdb.d/01-seed.sql:ro
+    # Postgres TIDAK di proxy-net — tidak boleh terekspos keluar.
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U produk -d katalog"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+networks:
+  # proxy-net dibuat oleh setup Traefik (external) — shared antar stack
+  proxy-net:
+    external: true
+  # backend: jaringan privat internal stack ini (api <-> postgres)
+  backend:
+
+volumes:
+  pgdata:

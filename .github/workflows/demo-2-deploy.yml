@@ -1,0 +1,88 @@
+# =============================================================
+# Demo 2 — CI/CD: build image → push GHCR → redeploy via Portainer
+#
+# CATATAN: workflow HARUS di root repo (.github/workflows/) —
+# GitHub tidak membaca workflow di subfolder. Filter `paths`
+# memastikan hanya jalan saat demo-2 berubah.
+#
+# Secrets yang dibutuhkan (Settings → Secrets and variables → Actions):
+#   PORTAINER_WEBHOOK_URL  — webhook stack dari Portainer
+#                            (Stacks → pilih stack → Webhooks → aktifkan)
+# Variables:
+#   DOMAIN_API             — mis. api.demo.example.com (untuk build web)
+#
+# GITHUB_TOKEN otomatis tersedia untuk push ke ghcr.io.
+# =============================================================
+name: "Demo 2 - Deploy Docker"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "demo-2-docker/**"
+      - "shared/**"
+      - ".github/workflows/demo-2-deploy.yml"
+  workflow_dispatch: # bisa dipicu manual dari tab Actions — berguna saat demo
+
+env:
+  REGISTRY: ghcr.io
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # VERSION = git SHA pendek → tampil di badge frontend.
+      # Tiap deploy, audiens melihat versi berubah di layar.
+      - name: Tentukan versi dari git SHA
+        id: ver
+        run: echo "version=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Login ke GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push image API
+        uses: docker/build-push-action@v6
+        with:
+          context: demo-2-docker/api
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/demo2-api:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/demo2-api:${{ steps.ver.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.ver.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push image Web
+        uses: docker/build-push-action@v6
+        with:
+          context: demo-2-docker/web
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/demo2-web:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/demo2-web:${{ steps.ver.outputs.version }}
+          build-args: |
+            VITE_API_BASE=https://${{ vars.DOMAIN_API }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Portainer menarik image terbaru dan me-recreate container.
+      # Dikombinasikan dengan replicas >= 3 + healthcheck + Traefik
+      # retry middleware, deploy praktis tanpa downtime.
+      - name: Trigger redeploy via Portainer webhook
+        run: |
+          curl -fsS -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}"
+          echo "Redeploy dipicu. Versi baru: ${{ steps.ver.outputs.version }}"

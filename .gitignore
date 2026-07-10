@@ -1,0 +1,29 @@
+# Environment & secrets — JANGAN pernah commit
+.env
+*.pem
+*.key
+
+# Dependencies & build output
+node_modules/
+dist/
+vendor/
+demo-2-docker/api/api
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Laravel
+demo-1-legacy/vendor/
+demo-1-legacy/storage/*.key
+demo-1-legacy/.phpunit.result.cache
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/

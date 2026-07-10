@@ -1,0 +1,80 @@
+# =============================================================
+# REFERENSI: Setup Traefik + Portainer untuk server BARU dari nol.
+#
+# Kalau server sudah punya Traefik + Portainer + proxy-net
+# (setup standar), file ini TIDAK perlu dijalankan.
+#
+# Cara pakai di server baru:
+#   1. docker network create proxy-net
+#   2. Salin file ini ke server (mis. /opt/infra/docker-compose.yml)
+#   3. Buat .env berisi: ACME_EMAIL, DOMAIN_TRAEFIK, DOMAIN_PORTAINER
+#   4. docker compose up -d
+# =============================================================
+
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      # Provider Docker: baca label container untuk routing
+      - "--providers.docker=true"
+      # Container TIDAK otomatis terekspos — harus opt-in via
+      # label traefik.enable=true (lebih aman)
+      - "--providers.docker.exposedbydefault=false"
+      # Traefik hanya melihat container di network proxy-net
+      - "--providers.docker.network=proxy-net"
+      # Entrypoints: 80 redirect permanen ke 443
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      # Let's Encrypt (HTTP-01 challenge)
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      # Dashboard (diamankan lewat router + auth di label bawah)
+      - "--api.dashboard=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      - proxy-net
+    labels:
+      - "traefik.enable=true"
+      # Dashboard Traefik di subdomain sendiri
+      - "traefik.http.routers.traefik.rule=Host(`${DOMAIN_TRAEFIK}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+      # Basic auth — generate: htpasswd -nb admin PASSWORD_KUAT
+      # lalu escape $ jadi $$ kalau ditaruh langsung di compose.
+      - "traefik.http.routers.traefik.middlewares=traefik-auth"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASICAUTH}"
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - proxy-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`${DOMAIN_PORTAINER}`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+
+networks:
+  proxy-net:
+    external: true
+
+volumes:
+  letsencrypt:
+  portainer_data:
