@@ -12,7 +12,7 @@
 #    hapus user-nya setelah acara.)
 #
 # Variables (nilai dari `terraform output` setelah apply):
-#   AWS_REGION              — ap-southeast-3
+#   AWS_REGION              — ap-southeast-1
 #   ECR_REPOSITORY_URL      — output ecr_repository_url
 #   ECS_CLUSTER             — output ecs_cluster_name
 #   ECS_SERVICE             — output ecs_service_name

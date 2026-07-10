@@ -1,8 +1,8 @@
 # =============================================================
 # Aurora Serverless v2 — PostgreSQL, min 0.5 / max 1 ACU.
 #
-# 💰 Estimasi biaya (ap-southeast-3): ±$0.14/ACU-jam →
-#    0.5 ACU × 24 jam ≈ $1.7/hari + storage sen-senan.
+# 💰 Estimasi biaya (ap-southeast-1): ±$0.12/ACU-jam →
+#    0.5 ACU × 24 jam ≈ $1.5/hari + storage sen-senan.
 #    Komponen TERMAHAL kedua setelah ALB kalau lupa destroy!
 # =============================================================
 
@@ -22,9 +22,9 @@ resource "aws_rds_cluster" "aurora" {
   cluster_identifier = "${var.project}-aurora"
 
   engine = "aurora-postgresql"
-  # Cek versi yang tersedia di Jakarta kalau apply gagal di sini:
+  # Cek versi yang tersedia di Singapura kalau apply gagal di sini:
   # aws rds describe-db-engine-versions --engine aurora-postgresql \
-  #   --query 'DBEngineVersions[].EngineVersion' --region ap-southeast-3
+  #   --query 'DBEngineVersions[].EngineVersion' --region ap-southeast-1
   engine_version = "16.6"
   engine_mode    = "provisioned" # Serverless v2 = provisioned + scaling config
 

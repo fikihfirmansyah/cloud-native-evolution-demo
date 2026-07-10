@@ -20,7 +20,7 @@ terraform output -raw seed_command
 
 # 2. Jalankan perintah yang tercetak (copy-paste), contoh bentuknya:
 aws ecs run-task \
-  --region ap-southeast-3 \
+  --region ap-southeast-1 \
   --cluster demo3-cluster \
   --task-definition demo3-seed \
   --launch-type FARGATE \
@@ -31,10 +31,10 @@ aws ecs run-task \
 
 ```bash
 # 1. Tunggu task selesai (STOPPED, exit code 0) — ±30-60 detik
-aws ecs list-tasks --cluster demo3-cluster --desired-status STOPPED --region ap-southeast-3
+aws ecs list-tasks --cluster demo3-cluster --desired-status STOPPED --region ap-southeast-1
 
 # 2. Cek log — harus ada baris "SEED-BERHASIL" dan "INSERT 0 10"
-aws logs tail /ecs/demo3-api --region ap-southeast-3 --since 5m | grep -A2 seed
+aws logs tail /ecs/demo3-api --region ap-southeast-1 --since 5m | grep -A2 seed
 
 # 3. Bukti akhir: API mengembalikan produk
 curl "$(terraform output -raw alb_url)/api/produk"

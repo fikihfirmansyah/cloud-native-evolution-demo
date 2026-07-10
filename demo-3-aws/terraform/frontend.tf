@@ -33,7 +33,7 @@ resource "aws_cloudfront_distribution" "web" {
   enabled             = true
   default_root_object = "index.html"
   comment             = "${var.project} frontend"
-  price_class         = "PriceClass_200" # termasuk edge Asia (Jakarta/Singapura)
+  price_class         = "PriceClass_200" # termasuk edge Asia (Singapura/Indonesia)
 
   origin {
     domain_name              = aws_s3_bucket.web.bucket_regional_domain_name

@@ -1,12 +1,12 @@
 # =============================================================
 # Shortcut demo-3 — dijalankan dari laptop dengan AWS CLI
-# terkonfigurasi (profile/creds region ap-southeast-3).
+# terkonfigurasi (profile/creds region ap-southeast-1).
 #
 # Nilai CLUSTER/SERVICE/URL diambil otomatis dari terraform output.
 # =============================================================
 
 TF_DIR   := terraform
-REGION   := ap-southeast-3
+REGION   := ap-southeast-1
 CLUSTER  = $(shell cd $(TF_DIR) && terraform output -raw ecs_cluster_name)
 SERVICE  = $(shell cd $(TF_DIR) && terraform output -raw ecs_service_name)
 ALB_URL  = $(shell cd $(TF_DIR) && terraform output -raw alb_url)

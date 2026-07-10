@@ -1,7 +1,7 @@
 # Demo 3 — AWS: aplikasi yang SAMA, ECS Fargate + Aurora
 
 Aplikasi Go + Svelte **dari demo-2, tanpa modifikasi satu baris pun**,
-di-deploy cloud-native penuh di AWS Jakarta (`ap-southeast-3`):
+di-deploy cloud-native penuh di AWS Singapura (`ap-southeast-1`):
 
 - **ECS Fargate** — 2-6 task, auto scaling CPU 60%, rolling deploy, 2 AZ
 - **ALB** — health check `/api/health`, load balancing antar task
@@ -16,8 +16,8 @@ presentasi.
 
 ## ⚠️ BIAYA — BACA DULU
 
-Stack ini ±**$2-3/hari** selama hidup (ALB ≈ $0.7, Aurora 0.5 ACU ≈ $1.7,
-2 task Fargate ≈ $0.7). **Apply H-1, `terraform destroy` SEGERA setelah
+Stack ini ±**$2-3/hari** selama hidup (ALB ≈ $0.6, Aurora 0.5 ACU ≈ $1.5,
+2 task Fargate ≈ $0.6). **Apply H-1, `terraform destroy` SEGERA setelah
 acara.** Estimasi per komponen ada di komentar tiap file `.tf`.
 
 ## Struktur
@@ -25,7 +25,7 @@ acara.** Estimasi per komponen ada di komentar tiap file `.tf`.
 ```
 demo-3-aws/
 ├── terraform/          # satu folder, per-file per-concern
-│   ├── providers.tf    # region Jakarta + peringatan destroy
+│   ├── providers.tf    # region Singapura + peringatan destroy
 │   ├── variables.tf
 │   ├── vpc.tf          # VPC 2 AZ + security group berantai ALB→ECS→Aurora
 │   ├── alb.tf          # ALB + target group /api/health
@@ -43,7 +43,7 @@ demo-3-aws/
 
 ## Prasyarat
 
-1. Akun AWS + IAM user/role dengan akses admin ke region `ap-southeast-3`
+1. Akun AWS + IAM user/role dengan akses admin ke region `ap-southeast-1`
    (untuk terraform apply). AWS CLI v2 terkonfigurasi di laptop.
 2. Terraform ≥ 1.5 (`terraform version`).
 3. Repo GitHub dengan secrets/variables (tabel di bawah).
@@ -78,7 +78,7 @@ Workflow: `.github/workflows/demo-3-deploy-aws.yml` (root repo). Butuh:
 |---|---|---|
 | Secret | `AWS_ACCESS_KEY_ID` | access key IAM user demo (hapus user setelah acara) |
 | Secret | `AWS_SECRET_ACCESS_KEY` | pasangannya |
-| Variable | `AWS_REGION` | `ap-southeast-3` |
+| Variable | `AWS_REGION` | `ap-southeast-1` |
 | Variable | `ECR_REPOSITORY_URL` | output `ecr_repository_url` |
 | Variable | `ECS_CLUSTER` | output `ecs_cluster_name` |
 | Variable | `ECS_SERVICE` | output `ecs_service_name` |
@@ -100,7 +100,7 @@ ALB. URL ALB tetap berguna untuk `curl` langsung saat demo/verifikasi.
 - [ ] Push dummy → workflow hijau → badge versi berubah (rolling deploy)
 - [ ] **Rekam video auto-scaling** (panduan di DEMO-SCRIPT.md momen C)
 - [ ] Rekam video fallback momen A & B
-- [ ] Console AWS: login tersimpan, region Jakarta, tab tersusun
+- [ ] Console AWS: login tersimpan, region Singapura, tab tersusun
 
 ## Reset ulang demo
 
@@ -117,7 +117,7 @@ ALB. URL ALB tetap berguna untuk `curl` langsung saat demo/verifikasi.
 | Task STOPPED: secret error | execution role belum propagate | tunggu 1-2 menit, ECS retry sendiri |
 | ALB 503 | belum ada target healthy | `make tasks` + `make events` |
 | `/api/produk` → error database | Aurora belum available / belum seed | cek status cluster; `make seed` |
-| Apply gagal di Aurora engine_version | versi tidak tersedia di Jakarta | cek versi: perintah ada di komentar `aurora.tf` |
+| Apply gagal di Aurora engine_version | versi tidak tersedia di Singapura | cek versi: perintah ada di komentar `aurora.tf` |
 | Frontend blank | `VITE_API_BASE` salah saat build | cek variable `ALB_URL`, jalankan ulang workflow |
 | Badge `API DOWN` di CloudFront | mixed content http/https | lihat catatan HTTPS di atas |
 | Biaya jalan terus setelah acara | **lupa destroy** | `make destroy` SEKARANG |

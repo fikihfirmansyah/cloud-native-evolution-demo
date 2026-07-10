@@ -4,7 +4,7 @@
 > - `terraform apply` sudah selesai H-1, Aurora terseed, deploy pertama sukses
 > - `make status` → running=2, rollout=COMPLETED
 > - Browser tab: CloudFront URL (halaman produk + badge), AWS Console
->   (ECS service, Aurora, target group) — SUDAH LOGIN, region Jakarta
+>   (ECS service, Aurora, target group) — SUDAH LOGIN, region Singapura
 > - Terminal 1: siap `make watch`
 > - Terminal 2: perintah demo
 > - **Video auto-scaling sudah direkam H-1** (momen C tidak live)
@@ -15,7 +15,7 @@
 
 **Narasi:**
 
-> "Aplikasi yang kalian lihat sekarang — persis sama dengan demo Docker tadi — sedang berjalan di data center AWS di Jakarta. Mari kita lihat isinya."
+> "Aplikasi yang kalian lihat sekarang — persis sama dengan demo Docker tadi — sedang berjalan di data center AWS di Singapura. Mari kita lihat isinya."
 
 **Urutan tab (2-3 menit, jangan lama-lama):**
 
