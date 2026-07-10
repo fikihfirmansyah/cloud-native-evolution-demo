@@ -14,6 +14,13 @@
 set -euo pipefail
 
 APP_DIR="/var/www/cloud-native-evolution-demo/demo-1-legacy"
+LEGACY_ENV_FILE="/etc/katalog-legacy.env"
+PHP_FPM_SERVICE="php8.3-fpm"
+if [ -f "${LEGACY_ENV_FILE}" ]; then
+    # shellcheck source=/dev/null
+    source "${LEGACY_ENV_FILE}"
+fi
+
 cd "$APP_DIR"
 
 echo "==> [1/5] git pull (kode baru menimpa kode lama, di server yang sama)"
@@ -29,6 +36,6 @@ echo "==> [4/5] rebuild config cache"
 php artisan config:cache
 
 echo "==> [5/5] restart php-fpm (semua request yang sedang jalan terputus)"
-systemctl restart php8.3-fpm
+systemctl restart "${PHP_FPM_SERVICE}"
 
 echo "==> Deploy selesai. (Berapa detik downtime tadi? Cek loop curl-mu.)"

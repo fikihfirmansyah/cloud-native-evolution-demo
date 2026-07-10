@@ -38,4 +38,4 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script: bash /var/www/cloud-native-evolution-demo/demo-1-legacy/deploy-jadul.sh
+          script: sudo bash /var/www/cloud-native-evolution-demo/demo-1-legacy/deploy-jadul.sh

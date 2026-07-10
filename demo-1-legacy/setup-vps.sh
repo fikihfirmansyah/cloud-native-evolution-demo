@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================
-# Setup VPS demo-1 (legacy) — Ubuntu 22.04, jalankan sebagai root.
+# Setup VPS demo-1 (legacy) — Ubuntu 22.04 / Debian 12+, jalankan sebagai root.
 #
 # Idempotent: aman dijalankan ulang kalau gagal di tengah.
 #
@@ -21,22 +21,52 @@ APP_DIR="${BASE_DIR}/demo-1-legacy"        # app hidup di subfolder monorepo
 DB_NAME="katalog"
 DB_USER="katalog"
 DB_PASS_FILE="/root/.katalog-db-pass"
+LEGACY_ENV_FILE="/etc/katalog-legacy.env"
 
 export DEBIAN_FRONTEND=noninteractive
 
 # ---------- 1. Paket dasar ----------
-# PPA ondrej/php karena Ubuntu 22.04 bawaan hanya PHP 8.1,
-# sedangkan Laravel 11 butuh PHP >= 8.2.
-echo "==> 1/7 Install paket (nginx, PHP 8.3, MySQL, git)..."
+# Laravel 11 butuh PHP >= 8.2.
+# Ubuntu 22.04: PPA ondrej/php → PHP 8.3.
+# Debian 12+: PHP 8.2+ dari repo bawaan (Debian 13 → 8.4).
+echo "==> 1/7 Install paket (nginx, PHP, MySQL, git)..."
 apt-get update -q
-apt-get install -y -q software-properties-common curl git unzip
-add-apt-repository -y ppa:ondrej/php
-apt-get update -q
+apt-get install -y -q curl git unzip
+
+if grep -qi ubuntu /etc/os-release 2>/dev/null; then
+    PHP_VERSION="8.3"
+    MYSQL_PKG="mysql-server"
+    apt-get install -y -q software-properties-common
+    add-apt-repository -y ppa:ondrej/php
+    apt-get update -q
+elif grep -qi debian /etc/os-release 2>/dev/null; then
+    PHP_VERSION="8.4"
+    MYSQL_PKG="default-mysql-server"
+else
+    echo "OS tidak dikenali. Dukungan: Ubuntu 22.04+ atau Debian 12+." >&2
+    exit 1
+fi
+
+PHP_FPM_SERVICE="php${PHP_VERSION}-fpm"
 apt-get install -y -q \
     nginx \
-    mysql-server \
-    php8.3-fpm php8.3-cli php8.3-mysql php8.3-xml php8.3-mbstring \
-    php8.3-curl php8.3-zip php8.3-bcmath php8.3-intl
+    "${MYSQL_PKG}" \
+    "php${PHP_VERSION}-fpm" "php${PHP_VERSION}-cli" "php${PHP_VERSION}-mysql" \
+    "php${PHP_VERSION}-xml" "php${PHP_VERSION}-mbstring" \
+    "php${PHP_VERSION}-curl" "php${PHP_VERSION}-zip" \
+    "php${PHP_VERSION}-bcmath" "php${PHP_VERSION}-intl"
+
+echo "PHP_FPM_SERVICE=${PHP_FPM_SERVICE}" > "${LEGACY_ENV_FILE}"
+if systemctl list-unit-files mariadb.service --no-legend 2>/dev/null | grep -q mariadb; then
+    MYSQL_SERVICE="mariadb"
+elif systemctl list-unit-files mysql.service --no-legend 2>/dev/null | grep -q mysql; then
+    MYSQL_SERVICE="mysql"
+else
+    echo "Tidak menemukan service mysql/mariadb." >&2
+    exit 1
+fi
+echo "MYSQL_SERVICE=${MYSQL_SERVICE}" >> "${LEGACY_ENV_FILE}"
+chmod 644 "${LEGACY_ENV_FILE}"
 
 # ---------- 2. Composer ----------
 echo "==> 2/7 Install composer..."
@@ -107,7 +137,7 @@ server {
 
     location ~ \.php\$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_pass unix:/run/php/${PHP_FPM_SERVICE}.sock;
     }
 
     location ~ /\.(?!well-known) {
@@ -122,9 +152,9 @@ nginx -t
 
 # ---------- 7. Restart service ----------
 echo "==> 7/7 Restart service..."
-systemctl enable --now php8.3-fpm nginx mysql
+systemctl enable --now "${PHP_FPM_SERVICE}" nginx "${MYSQL_SERVICE}"
 systemctl reload nginx
-systemctl restart php8.3-fpm
+systemctl restart "${PHP_FPM_SERVICE}"
 
 echo ""
 echo "============================================="

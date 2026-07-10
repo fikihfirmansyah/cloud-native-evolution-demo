@@ -34,13 +34,13 @@ watch: ## Loop curl — satu baris per detik: timestamp + HTTP status (untuk pro
 	done
 
 deploy: ## DEMO momen A: jalankan deploy jadul via SSH (lihat downtime di watch)
-	ssh $(VPS) 'bash /var/www/cloud-native-evolution-demo/demo-1-legacy/deploy-jadul.sh'
+	ssh $(VPS) 'sudo bash /var/www/cloud-native-evolution-demo/demo-1-legacy/deploy-jadul.sh'
 
 stop-mysql: ## DEMO momen B: matikan MySQL → semua halaman 500
-	ssh $(VPS) 'systemctl stop mysql'
+	ssh $(VPS) 'source /etc/katalog-legacy.env 2>/dev/null; sudo systemctl stop $${MYSQL_SERVICE:-mysql}'
 
 start-mysql: ## Pemulihan momen B: nyalakan MySQL lagi
-	ssh $(VPS) 'systemctl start mysql'
+	ssh $(VPS) 'source /etc/katalog-legacy.env 2>/dev/null; sudo systemctl start $${MYSQL_SERVICE:-mysql}'
 
 load: ## DEMO momen C: load test 20 detik, 100 koneksi (butuh `hey` di laptop)
 	hey -z 20s -c 100 $(URL)/api/produk
@@ -49,4 +49,4 @@ ssh: ## SSH ke VPS
 	ssh $(VPS)
 
 status: ## Cek status service di VPS
-	ssh $(VPS) 'systemctl is-active nginx php8.3-fpm mysql'
+	ssh $(VPS) 'source /etc/katalog-legacy.env 2>/dev/null; sudo systemctl is-active nginx $${PHP_FPM_SERVICE:-php8.3-fpm} $${MYSQL_SERVICE:-mysql}'
