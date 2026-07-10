@@ -17,7 +17,8 @@
 #   ECS_CLUSTER             — output ecs_cluster_name
 #   ECS_SERVICE             — output ecs_service_name
 #   S3_BUCKET_WEB           — output s3_bucket_web
-#   CLOUDFRONT_DIST_ID      — output cloudfront_distribution_id
+#   CLOUDFRONT_DIST_ID      — output cloudfront_distribution_id (kosong jika belum CloudFront)
+#   VITE_API_BASE           — output vite_api_base (https://api-... saat S3 website; kosong jika CloudFront)
 # =============================================================
 name: "Demo 3 - Deploy AWS"
 
@@ -94,13 +95,12 @@ jobs:
         with:
           node-version: 24
 
-      # Frontend yang SAMA dengan demo-2 — bedanya cuma nilai
-      # VITE_API_BASE. Di sini KOSONG (same-origin): CloudFront
-      # meneruskan /api/* ke ALB, jadi frontend cukup fetch relatif.
+      # VITE_API_BASE dari GitHub variable (terraform output vite_api_base).
+      # Kosong = same-origin via CloudFront. Isi URL API penuh saat fallback S3 website.
       - name: Build Svelte
         working-directory: demo-2-docker/web
         env:
-          VITE_API_BASE: ""
+          VITE_API_BASE: ${{ vars.VITE_API_BASE }}
         run: |
           npm ci
           npm run build
@@ -113,8 +113,12 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Sync ke S3 + invalidate CloudFront
+        env:
+          CF_ID: ${{ vars.CLOUDFRONT_DIST_ID }}
         run: |
           aws s3 sync demo-2-docker/web/dist "s3://${{ vars.S3_BUCKET_WEB }}" --delete
-          aws cloudfront create-invalidation \
-            --distribution-id "${{ vars.CLOUDFRONT_DIST_ID }}" \
-            --paths "/*"
+          if [ -n "$CF_ID" ]; then
+            aws cloudfront create-invalidation \
+              --distribution-id "$CF_ID" \
+              --paths "/*"
+          fi

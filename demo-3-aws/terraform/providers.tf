@@ -38,3 +38,17 @@ provider "aws" {
     }
   }
 }
+
+# CloudFront custom domain membutuhkan ACM di us-east-1.
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+
+  default_tags {
+    tags = {
+      Project   = "cloud-native-evolution-demo"
+      Demo      = "demo-3-aws"
+      ManagedBy = "terraform"
+    }
+  }
+}

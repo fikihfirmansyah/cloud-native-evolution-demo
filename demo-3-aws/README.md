@@ -83,7 +83,8 @@ Workflow: `.github/workflows/demo-3-deploy-aws.yml` (root repo). Butuh:
 | Variable | `ECS_CLUSTER` | output `ecs_cluster_name` |
 | Variable | `ECS_SERVICE` | output `ecs_service_name` |
 | Variable | `S3_BUCKET_WEB` | output `s3_bucket_web` |
-| Variable | `CLOUDFRONT_DIST_ID` | output `cloudfront_distribution_id` |
+| Variable | `CLOUDFRONT_DIST_ID` | output `cloudfront_distribution_id` (kosong jika fallback S3) |
+| Variable | `VITE_API_BASE` | output `vite_api_base` (`https://api-...` saat S3 website; kosong jika CloudFront) |
 
 Catatan arsitektur frontend: CloudFront meneruskan `/api/*` ke ALB
 (origin kedua), jadi frontend fetch same-origin (`VITE_API_BASE` kosong).

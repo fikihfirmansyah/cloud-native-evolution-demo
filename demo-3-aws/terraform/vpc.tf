@@ -81,13 +81,21 @@ resource "aws_subnet" "private" {
 
 resource "aws_security_group" "alb" {
   name_prefix = "${var.project}-alb-"
-  description = "ALB: terima HTTP dari internet"
+  description = "ALB: terima HTTP/HTTPS dari internet"
   vpc_id      = aws_vpc.utama.id
 
   ingress {
     description = "HTTP dari mana saja"
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS dari mana saja"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

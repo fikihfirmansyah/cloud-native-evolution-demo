@@ -1,0 +1,5 @@
+# Salin ke terraform.tfvars (file ini tidak di-commit).
+domain_api        = "api-demo-aws-3.fikihfirmansyah.my.id"
+domain_web        = "demo-aws-3.fikihfirmansyah.my.id"
+enable_cloudfront = false
+enable_https      = true

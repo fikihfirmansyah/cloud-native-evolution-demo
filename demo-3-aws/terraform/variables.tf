@@ -51,3 +51,27 @@ variable "api_max_count" {
   type        = number
   default     = 6
 }
+
+variable "domain_api" {
+  description = "Domain publik API (CNAME → ALB)"
+  type        = string
+  default     = "api-demo-aws-3.fikihfirmansyah.my.id"
+}
+
+variable "domain_web" {
+  description = "Domain publik frontend (CNAME → CloudFront atau S3 website)"
+  type        = string
+  default     = "demo-aws-3.fikihfirmansyah.my.id"
+}
+
+variable "enable_cloudfront" {
+  description = "CloudFront untuk frontend. Set false jika akun AWS belum terverifikasi untuk CloudFront."
+  type        = bool
+  default     = true
+}
+
+variable "enable_https" {
+  description = "HTTPS listener di ALB. Set true setelah record validasi ACM api-* ditambahkan di DNS."
+  type        = bool
+  default     = false
+}
