@@ -23,7 +23,7 @@ services:
     environment:
       DATABASE_URL: postgres://produk:${POSTGRES_PASSWORD}@postgres:5432/katalog?sslmode=disable
       PORT: "8080"
-      VERSION: ${VERSION:-dev}
+      # VERSION tidak di-override di sini — nilai dari image CI (git SHA).
       CORS_ORIGIN: https://${DOMAIN_WEB}
     depends_on:
       postgres:
