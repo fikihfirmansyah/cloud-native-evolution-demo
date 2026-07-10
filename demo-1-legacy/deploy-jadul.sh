@@ -24,7 +24,8 @@ fi
 cd "$APP_DIR"
 
 echo "==> [1/5] git pull (kode baru menimpa kode lama, di server yang sama)"
-git pull
+git fetch origin main
+git reset --hard origin/main
 
 echo "==> [2/5] composer install (autoloader dibongkar-pasang — di sinilah request mulai error)"
 composer install --no-dev --optimize-autoloader --no-interaction
