@@ -27,3 +27,4 @@ demo-1-legacy/.phpunit.result.cache
 *.swp
 .idea/
 .vscode/
+.env.demo

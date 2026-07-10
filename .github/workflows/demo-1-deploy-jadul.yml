@@ -1,0 +1,37 @@
+# =============================================================
+# Demo 1 — "CI/CD" jadul.
+#
+# Ini terlihat modern karena pakai GitHub Actions, tapi pola
+# deploy-nya tetap jadul: SSH ke server lalu replace file di
+# server yang sama. Tidak ada build artifact, tidak ada rollback,
+# tidak ada health check, dan ADA downtime setiap deploy.
+# Otomasi ≠ cloud-native — ini poin penting presentasi.
+#
+# Secrets yang dibutuhkan:
+#   VPS_HOST     — IP / hostname VPS
+#   VPS_USER     — user SSH (root, atau user dengan sudo tanpa password)
+#   VPS_SSH_KEY  — private key SSH (isi file, format PEM/OpenSSH)
+# =============================================================
+name: "Demo 1 - Deploy Jadul"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "demo-1-legacy/**"
+      - ".github/workflows/demo-1-deploy-jadul.yml"
+  workflow_dispatch: # bisa dipicu manual saat demo
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Tidak ada langkah build. Tidak ada test. Tidak ada image.
+      # Cuma: masuk ke server, jalankan skrip deploy.
+      - name: SSH ke VPS dan jalankan deploy-jadul.sh
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: bash /var/www/cloud-native-evolution-demo/demo-1-legacy/deploy-jadul.sh
