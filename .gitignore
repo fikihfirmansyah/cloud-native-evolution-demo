@@ -1,12 +1,16 @@
 # Environment & secrets — JANGAN pernah commit
 .env
+.env.*
+!.env.example
 *.pem
 *.key
 
-# Dependencies & build output
+# Dependencies
 node_modules/
-dist/
 vendor/
+
+# Build output
+dist/
 demo-2-docker/api/api
 
 # Terraform
@@ -15,16 +19,37 @@ demo-2-docker/api/api
 *.tfstate.*
 *.tfvars
 !*.tfvars.example
-.terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
 
-# Laravel
+# Laravel (demo-1-legacy)
 demo-1-legacy/vendor/
-demo-1-legacy/storage/*.key
 demo-1-legacy/.phpunit.result.cache
+demo-1-legacy/.phpunit.cache
+demo-1-legacy/public/build
+demo-1-legacy/public/hot
+demo-1-legacy/public/storage
+demo-1-legacy/storage/*.key
+demo-1-legacy/storage/logs/*.log
+demo-1-legacy/storage/framework/cache/data/*
+demo-1-legacy/storage/framework/sessions/*
+demo-1-legacy/storage/framework/views/*
+demo-1-legacy/bootstrap/cache/*.php
+
+# Logs & coverage
+*.log
+coverage/
 
 # OS / editor
 .DS_Store
+Thumbs.db
 *.swp
+*.swo
 .idea/
 .vscode/
-.env.demo
+.fleet/
+*.sublime-*
