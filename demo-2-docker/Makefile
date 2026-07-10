@@ -23,7 +23,7 @@ down: ## Stop seluruh stack (data postgres tetap aman di volume)
 	docker compose down
 
 build: ## Build ulang image secara lokal
-	docker compose build
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml build
 
 ps: ## Status container
 	docker compose ps

@@ -10,13 +10,9 @@
 
 services:
   api:
-    # Image dari GHCR (di-push oleh GitHub Actions). Untuk build lokal:
-    # docker compose build api
+    # Image dari GHCR (di-push oleh GitHub Actions).
+    # Build lokal: make build (pakai docker-compose.dev.yml)
     image: ${API_IMAGE:-ghcr.io/fikihfirmansyah/demo2-api:latest}
-    build:
-      context: ./api
-      args:
-        VERSION: ${VERSION:-dev}
     restart: unless-stopped
     # JANGAN set container_name di sini — service ini harus bisa
     # di-scale: docker compose up -d --scale api=5
@@ -52,10 +48,6 @@ services:
 
   web:
     image: ${WEB_IMAGE:-ghcr.io/fikihfirmansyah/demo2-web:latest}
-    build:
-      context: ./web
-      args:
-        VITE_API_BASE: https://${DOMAIN_API}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]

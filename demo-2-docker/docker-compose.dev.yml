@@ -1,0 +1,13 @@
+# Override untuk build lokal — tidak dipakai Portainer/CI.
+# Pakai: docker compose -f docker-compose.yml -f docker-compose.dev.yml build
+services:
+  api:
+    build:
+      context: ./api
+      args:
+        VERSION: ${VERSION:-dev}
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_BASE: https://${DOMAIN_API}
